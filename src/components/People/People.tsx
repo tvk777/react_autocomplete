@@ -25,9 +25,17 @@ export const People: FC<Props> = ({
 
   const debouncedFilter = useRef(
     debounce((value: string) => {
-      const filtered = people.filter(p =>
-        p.name.toLowerCase().includes(value.toLowerCase()),
-      );
+      const trimmed = value.trim();
+
+      if (trimmed === '') {
+        setFilteredPeople([]);
+
+        return;
+      }
+
+      const lower = trimmed.toLowerCase();
+
+      const filtered = people.filter(p => p.name.toLowerCase().includes(lower));
 
       setFilteredPeople(filtered);
     }, delay),
@@ -59,18 +67,20 @@ export const People: FC<Props> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
+    if (selectedPerson) {
+      onSelected(null);
+    }
+
     setQuery(value);
     debouncedFilter(value);
   };
 
   const handleSelect = (person: Person) => {
     onSelected(person);
-    setQuery(person.name);
-    setFilteredPeople(people);
     setIsOpen(false);
   };
 
-  const toggleDropdown = () => {
+  const handleToggle = () => {
     setIsOpen(prev => {
       const next = !prev;
 
@@ -94,7 +104,7 @@ export const People: FC<Props> = ({
             placeholder="Enter a part of the name"
             className="input"
             data-cy="search-input"
-            onClick={() => !isOpen && toggleDropdown()}
+            onFocus={handleToggle}
             value={query}
             onChange={handleChange}
           />
