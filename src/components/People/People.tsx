@@ -6,11 +6,18 @@ import s from './People.module.scss';
 
 interface Props {
   people: Person[];
+  selectedPerson: Person | null;
+  onSelected: (person: Person | null) => void;
+  delay: number;
 }
 
-export const People: FC<Props> = ({ people }) => {
+export const People: FC<Props> = ({
+  people,
+  selectedPerson,
+  onSelected,
+  delay = 300,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [filteredPeople, setFilteredPeople] = useState<Person[]>(people);
   const [query, setQuery] = useState('');
 
@@ -23,8 +30,14 @@ export const People: FC<Props> = ({ people }) => {
       );
 
       setFilteredPeople(filtered);
-    }, 300),
+    }, delay),
   ).current;
+
+  useEffect(() => {
+    if (selectedPerson) {
+      setQuery(selectedPerson.name);
+    }
+  }, [selectedPerson]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -47,29 +60,30 @@ export const People: FC<Props> = ({ people }) => {
     const value = e.target.value;
 
     setQuery(value);
-
-    if (selectedPerson) {
-      setSelectedPerson(null);
-    }
-
     debouncedFilter(value);
   };
 
   const handleSelect = (person: Person) => {
-    setSelectedPerson(person);
+    onSelected(person);
     setQuery(person.name);
+    setFilteredPeople(people);
     setIsOpen(false);
   };
 
-  const toggleDropdown = () => setIsOpen(prev => !prev);
+  const toggleDropdown = () => {
+    setIsOpen(prev => {
+      const next = !prev;
+
+      if (next) {
+        setFilteredPeople(people);
+      }
+
+      return next;
+    });
+  };
 
   return (
     <div>
-      <h1 className="title" data-cy="title">
-        {selectedPerson
-          ? `${selectedPerson.name} (${selectedPerson.born} - ${selectedPerson.died})`
-          : 'No selected person'}
-      </h1>
       <div
         className={cn('dropdown', { 'is-active': isOpen })}
         ref={containerRef}
@@ -80,7 +94,7 @@ export const People: FC<Props> = ({ people }) => {
             placeholder="Enter a part of the name"
             className="input"
             data-cy="search-input"
-            onClick={toggleDropdown}
+            onClick={() => !isOpen && toggleDropdown()}
             value={query}
             onChange={handleChange}
           />

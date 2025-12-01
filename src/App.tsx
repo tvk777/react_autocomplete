@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.scss';
 import { peopleFromServer } from './data/people';
 import { People } from './components/People/People';
+import { Person } from './types/Person';
 
 export const App: React.FC = () => {
-  //const { name, born, died } = peopleFromServer[0];
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   return (
     <div className="container">
       <main className="section is-flex is-flex-direction-column">
-        <People people={peopleFromServer} />
+        <h1 className="title" data-cy="title">
+          {selectedPerson
+            ? `${selectedPerson.name} (${selectedPerson.born} - ${selectedPerson.died})`
+            : 'No selected person'}
+        </h1>
+
+        <People
+          people={peopleFromServer}
+          selectedPerson={selectedPerson}
+          onSelected={setSelectedPerson}
+          delay={300}
+        />
       </main>
     </div>
   );
